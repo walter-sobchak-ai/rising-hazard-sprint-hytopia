@@ -1,9 +1,24 @@
 {
-  "name": "rising-hazard-sprint-hytopia-prototype",
+  "name": "rising-hazard-sprint-hytopia",
   "private": true,
-  "version": "0.0.1",
-  "type": "module",
+  "version": "0.0.2",
+  "description": "Rising Hazard Sprint — Hytopia prototype scaffold",
+  "main": "index.ts",
   "scripts": {
-    "lint": "node -e \"console.log('TODO: add linting once Hytopia SDK project shape is confirmed')\""
+    "start": "hytopia start",
+    "run": "hytopia run",
+    "build": "hytopia build",
+    "package": "hytopia package",
+    "upgrade-project": "hytopia upgrade-project",
+    "upgrade-assets-library": "hytopia upgrade-assets-library"
+  },
+  "dependencies": {
+    "hytopia": "^0.14.52"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "optionalDependencies": {
+    "@hytopia.com/assets": "^0.4.11"
   }
 }

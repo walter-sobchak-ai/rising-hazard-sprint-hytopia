@@ -1,6 +1,9 @@
 export type RoundState = 'LOBBY' | 'COUNTDOWN' | 'RUNNING' | 'RESULTS';
 
+import type { World } from 'hytopia';
+
 export interface RoundDeps {
+  world: World;
   hazards: { loadSchedule(): Promise<void>; start(seed: number): void; stop(): void };
   rewards: { grantRoundRewards(results: any[]): Promise<void> };
   quests: { progressFromRound(results: any[]): Promise<void> };

@@ -3,11 +3,13 @@ import fs from 'node:fs/promises';
 type HazardAdd = { type: string; params: Record<string, any> };
 type Phase = { tMs: number; add: HazardAdd[] };
 
+import type { World } from 'hytopia';
+
 export class HazardDirector {
   private phases: Phase[] = [];
   private timers: NodeJS.Timeout[] = [];
 
-  constructor(private opts: { schedulePath: string }) {}
+  constructor(private opts: { schedulePath: string; world: World }) {}
 
   async loadSchedule() {
     const raw = await fs.readFile(this.opts.schedulePath, 'utf8');
