@@ -1,0 +1,9 @@
+{
+  "name": "rising-hazard-sprint-hytopia-prototype",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "lint": "node -e \"console.log('TODO: add linting once Hytopia SDK project shape is confirmed')\""
+  }
+}
