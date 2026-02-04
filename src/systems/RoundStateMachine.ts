@@ -58,6 +58,10 @@ export class RoundStateMachine {
     if (y > stats.bestYAllTime) stats.bestYAllTime = y;
   }
 
+  getStats(playerId: string) {
+    return this.runStats.get(playerId);
+  }
+
   eliminate(playerId: string, info: { reason: string }) {
     const ent = this.playerEntities.get(playerId);
     const stats = this.runStats.get(playerId);

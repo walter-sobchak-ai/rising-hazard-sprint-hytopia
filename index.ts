@@ -102,18 +102,26 @@ function bootstrapMinimalWorld(world: World) {
 }
 
 function onPlayerJoin(world: World, rounds: RoundStateMachine, player: Player) {
+  // Load UI (roblox-like overlay)
+  player.ui.load('ui/index.html');
+
   const playerEntity = new DefaultPlayerEntity({
     player,
     name: 'Player',
   });
 
-  playerEntity.spawn(world, POSITIONS.LOBBY_SPAWN);
+  playerEntity.spawn(world, POSITIONS.RUN_SPAWN);
   (playerEntity.controller as DefaultPlayerEntityController).canSwim = () => false;
+
+  rounds.onPlayerJoin(player.id, playerEntity);
+
+  let lastUiSentAt = 0;
 
   // Solo mode:
   // - Track best height
   // - Eliminate when below rising hazard
   // - Also eliminate if you fall far off the course
+  // - Push HUD updates (throttled)
   playerEntity.on(EntityEvent.TICK, () => {
     rounds.observe(player.id);
 
@@ -127,9 +135,25 @@ function onPlayerJoin(world: World, rounds: RoundStateMachine, player: Player) {
       rounds.eliminate(player.id, { reason: 'fell' });
       return;
     }
-  });
 
-  rounds.onPlayerJoin(player.id, playerEntity);
+    const now = Date.now();
+    if (now - lastUiSentAt > 200) {
+      lastUiSentAt = now;
+      const stats = rounds.getStats(player.id);
+      player.ui.sendData({
+        type: 'state',
+        currentY: Math.floor(playerEntity.position.y),
+        bestThisRun: stats?.bestYThisRun ? Math.floor(stats.bestYThisRun) : Math.floor(playerEntity.position.y),
+        bestAllTime: stats?.bestYAllTime ? Math.floor(stats.bestYAllTime) : Math.floor(playerEntity.position.y),
+        lavaY: Math.floor(killY),
+        quests: [
+          { id: 'q1', title: 'Survive 30 seconds', progress: 0.1 },
+          { id: 'q2', title: 'Reach height 20', progress: Math.min(1, (playerEntity.position.y - 2) / 18) },
+          { id: 'q3', title: 'Reach height 35', progress: Math.min(1, (playerEntity.position.y - 2) / 33) },
+        ],
+      });
+    }
+  });
 }
 
 function onPlayerLeave(world: World, rounds: RoundStateMachine, player: Player) {

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rising Hazard Sprint HUD</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="hud">
+    <div class="panel top-left">
+      <div class="metric">
+        <div class="label">ALTITUDE</div>
+        <div class="value" id="altitude">0</div>
+      </div>
+      <div class="sub">
+        <span class="chip">Best (run): <b id="bestRun">0</b></span>
+        <span class="chip">Best (all): <b id="bestAll">0</b></span>
+      </div>
+      <div class="bar">
+        <div class="barLabel">LAVA</div>
+        <div class="barTrack"><div class="barFill" id="lavaFill"></div></div>
+        <div class="barValue" id="lavaY">0</div>
+      </div>
+    </div>
+
+    <div class="panel right" id="questPanel">
+      <div class="panelHeader">
+        <div>
+          <div class="panelTitle">QUESTS</div>
+          <div class="panelSubtitle">Weekly objectives</div>
+        </div>
+        <button class="toggle" id="toggleQuests">Hide</button>
+      </div>
+      <div class="questList" id="questList"></div>
+    </div>
+  </div>
+
+  <script src="./ui.js"></script>
+</body>
+</html>
