@@ -17,14 +17,6 @@ import { HazardDirector } from './src/systems/HazardDirector.js';
 import { RewardsService } from './src/systems/RewardsService.js';
 import { QuestsService } from './src/systems/QuestsService.js';
 
-const POSITIONS = {
-  LOBBY_SPAWN: { x: 0, y: 6, z: 0 },
-  RUN_SPAWN: { x: 0, y: COURSE.baseY + 2, z: 0 },
-};
-
-// Minimal floor so players don't instantly fall.
-const FLOOR = { from: { x: -16, z: -16 }, to: { x: 16, z: 16 }, y: 0 };
-
 // Spiral climb course (procedural)
 const COURSE = {
   baseY: 2,
@@ -33,6 +25,14 @@ const COURSE = {
   stepHeight: 1,
   platformHalfExtents: { x: 2, y: 0.5, z: 2 },
 };
+
+const POSITIONS = {
+  LOBBY_SPAWN: { x: 0, y: 6, z: 0 },
+  RUN_SPAWN: { x: 0, y: COURSE.baseY + 2, z: 0 },
+};
+
+// Minimal floor so players don't instantly fall.
+const FLOOR = { from: { x: -16, z: -16 }, to: { x: 16, z: 16 }, y: 0 };
 
 function degToRad(d: number) { return (d * Math.PI) / 180; }
 function round(n: number) { return Math.round(n); }
