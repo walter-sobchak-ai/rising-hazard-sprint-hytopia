@@ -51,14 +51,17 @@ if(toggleBtn){
 }
 
 // Hytopia UI data hook: many examples receive messages via window message.
+// Preferred hook in HYTOPIA UI is usually `hytopia.onData(...)`.
+window.hytopia = window.hytopia || {};
+window.hytopia.onData = (d) => {
+  if (d?.type === 'state') onState(d);
+  if (d?.type === 'ping') console.log('[UI] ping', d.t);
+};
+
+// Fallback: some client versions deliver data via postMessage
 window.addEventListener('message', (ev) => {
   const d = ev.data;
   if (!d) return;
   if (d.type === 'state') onState(d);
+  if (d.type === 'ping') console.log('[UI] ping (postMessage)', d.t);
 });
-
-// Some clients expose a global hook; keep this for compatibility.
-window.hytopia = window.hytopia || {};
-window.hytopia.onData = (d) => {
-  if (d?.type === 'state') onState(d);
-};

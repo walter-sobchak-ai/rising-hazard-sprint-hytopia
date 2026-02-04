@@ -102,8 +102,9 @@ function bootstrapMinimalWorld(world: World) {
 }
 
 function onPlayerJoin(world: World, rounds: RoundStateMachine, player: Player) {
-  // Load UI (roblox-like overlay)
+  // Load UI (roblox-like overlay) from assets/ui/
   player.ui.load('ui/index.html');
+  player.ui.sendData({ type: 'ping', t: Date.now() });
 
   const playerEntity = new DefaultPlayerEntity({
     player,
