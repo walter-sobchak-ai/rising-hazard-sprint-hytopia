@@ -86,9 +86,7 @@ export class HazardDirector {
         blockHalfExtents: { x: 18, y: 0.25, z: 18 },
         opacity: 0.65,
         rigidBodyOptions: {
-          type: RigidBodyType.KINEMATIC_POSITION,
-          enabledRotations: { x: false, y: false, z: false },
-          enabledPositions: { x: false, y: true, z: false },
+          type: RigidBodyType.KINEMATIC_POSITION
         },
       });
 
