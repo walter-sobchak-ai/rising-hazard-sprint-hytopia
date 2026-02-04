@@ -15,6 +15,8 @@ export class RoundStateMachine {
   private state: RoundState = 'LOBBY';
   private seed = 0;
   private roundDurationMs = 120_000;
+  private lobbyWaitMs = 12_000;
+  private countdownMs = 5_000;
   private minPlayers = 1;
   private players = new Set<string>();
   private playerEntities = new Map<string, DefaultPlayerEntity>();
@@ -42,7 +44,7 @@ export class RoundStateMachine {
   private async loop() {
     while (true) {
       await this.enterLobby();
-      await this.enterCountdown(5_000);
+      await this.enterCountdown(this.countdownMs);
       await this.enterRunning();
       const results = await this.enterResults();
       await this.deps.rewards.grantRoundRewards(results);
@@ -55,23 +57,28 @@ export class RoundStateMachine {
   private async enterLobby() {
     this.state = 'LOBBY';
 
+    this.deps.world.chatManager.sendBroadcastMessage('Lobby: next round starting soon...');
+
     // Reset players to lobby spawn.
     for (const ent of this.playerEntities.values()) {
       if (ent.isSpawned) ent.setPosition(this.deps.positions.LOBBY_SPAWN);
     }
 
     await this.waitUntil(() => this.players.size >= this.minPlayers);
+    await this.sleep(this.lobbyWaitMs);
   }
 
   private async enterCountdown(ms: number) {
     this.state = 'COUNTDOWN';
-    // TODO: UI — countdown
+    this.deps.world.chatManager.sendBroadcastMessage(`Round starts in ${Math.ceil(ms / 1000)}...`);
     await this.sleep(ms);
   }
 
   private async enterRunning() {
     this.state = 'RUNNING';
     this.seed = Math.floor(Math.random() * 1_000_000);
+
+    this.deps.world.chatManager.sendBroadcastMessage('GO! Survive the rising hazard.');
 
     // Spawn/teleport players to run start.
     for (const ent of this.playerEntities.values()) {
@@ -85,15 +92,19 @@ export class RoundStateMachine {
 
   private async enterResults(): Promise<any[]> {
     this.state = 'RESULTS';
-    // MVP: no placements yet.
-    await this.sleep(5_000);
+    this.deps.world.chatManager.sendBroadcastMessage('Round over. Play again!');
+    await this.sleep(6_000);
     return [];
   }
 
   eliminate(playerId: string, info: { reason: string }) {
-    // MVP: instantly reset to lobby spawn.
     const ent = this.playerEntities.get(playerId);
-    if (ent?.isSpawned) ent.setPosition(this.deps.positions.LOBBY_SPAWN);
+    if (!ent?.isSpawned) return;
+
+    // If we're in a run, respawn at run start; otherwise lobby.
+    const spawn = this.state === 'RUNNING' ? this.deps.positions.RUN_SPAWN : this.deps.positions.LOBBY_SPAWN;
+    ent.setPosition(spawn);
+    ent.setLinearVelocity({ x: 0, y: 0, z: 0 });
   }
 
   getKillY() {
