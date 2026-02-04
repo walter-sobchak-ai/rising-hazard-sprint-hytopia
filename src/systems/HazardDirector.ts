@@ -1,13 +1,17 @@
 import fs from 'node:fs/promises';
 
+import type { World } from 'hytopia';
+
 type HazardAdd = { type: string; params: Record<string, any> };
 type Phase = { tMs: number; add: HazardAdd[] };
 
-import type { World } from 'hytopia';
+type RisingFluidState = { height: number; riseRate: number };
 
 export class HazardDirector {
   private phases: Phase[] = [];
   private timers: NodeJS.Timeout[] = [];
+  private risingFluid: RisingFluidState | null = null;
+  private riseInterval: NodeJS.Timeout | null = null;
 
   constructor(private opts: { schedulePath: string; world: World }) {}
 
@@ -18,8 +22,8 @@ export class HazardDirector {
   }
 
   start(seed: number) {
-    // TODO(Hytopia): use deterministic RNG seeded by `seed` for hazard params.
-    // TODO(Hytopia): spawn hazards in the world and register damage/knockback.
+    // MVP: implement rising fluid as a kill-height that increases over time.
+    // Other hazards remain logged-only stubs for now.
 
     this.stop();
     const t0 = Date.now();
@@ -33,21 +37,40 @@ export class HazardDirector {
       }, delay);
       this.timers.push(timer);
     }
+
+    // Start ticking the rising fluid height.
+    this.riseInterval = setInterval(() => {
+      if (!this.risingFluid) return;
+      // riseRate is units per second
+      this.risingFluid.height += (this.risingFluid.riseRate * 50) / 1000;
+    }, 50);
   }
 
   stop() {
     for (const t of this.timers) clearTimeout(t);
     this.timers = [];
+
+    if (this.riseInterval) clearInterval(this.riseInterval);
+    this.riseInterval = null;
+    this.risingFluid = null;
+
     // TODO(Hytopia): despawn/disable all active hazards
   }
 
+  getKillY() {
+    return this.risingFluid ? this.risingFluid.height : -9999;
+  }
+
   private spawnHazard(type: string, params: Record<string, any>, ctx: { seed: number; tSinceStartMs: number }) {
+    if (type === 'rising_fluid') {
+      const startHeight = Number(params?.startHeight ?? 0);
+      const riseRate = Number(params?.riseRate ?? 0.02);
+      this.risingFluid = { height: startHeight, riseRate };
+      console.log('[HazardDirector] rising_fluid', { startHeight, riseRate, ctx });
+      return;
+    }
+
     // Stub: replace with real hazard implementations
-    // Examples:
-    // - rising_fluid: move a kill plane upward
-    // - sweeper: rotating arm that knocks players
-    // - falling_tiles: mark tiles to fall after stepped on
-    // - wind_gust: periodic impulse in a direction
-    console.log('[HazardDirector] spawn', { type, params, ctx });
+    console.log('[HazardDirector] spawn (stub)', { type, params, ctx });
   }
 }

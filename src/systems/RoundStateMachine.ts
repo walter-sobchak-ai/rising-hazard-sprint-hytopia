@@ -9,14 +9,17 @@ export interface RoundDeps {
   quests: { progressFromRound(results: any[]): Promise<void> };
 }
 
+import type { DefaultPlayerEntity } from 'hytopia';
+
 export class RoundStateMachine {
   private state: RoundState = 'LOBBY';
   private seed = 0;
   private roundDurationMs = 120_000;
   private minPlayers = 1;
   private players = new Set<string>();
+  private playerEntities = new Map<string, DefaultPlayerEntity>();
 
-  constructor(private deps: RoundDeps) {}
+  constructor(private deps: RoundDeps & { positions: { LOBBY_SPAWN: any; RUN_SPAWN: any } }) {}
 
   async start() {
     await this.deps.hazards.loadSchedule();
@@ -26,12 +29,14 @@ export class RoundStateMachine {
     await this.loop();
   }
 
-  onPlayerJoin(playerId: string) {
+  onPlayerJoin(playerId: string, entity?: DefaultPlayerEntity) {
     this.players.add(playerId);
+    if (entity) this.playerEntities.set(playerId, entity);
   }
 
   onPlayerLeave(playerId: string) {
     this.players.delete(playerId);
+    this.playerEntities.delete(playerId);
   }
 
   private async loop() {
@@ -49,7 +54,12 @@ export class RoundStateMachine {
 
   private async enterLobby() {
     this.state = 'LOBBY';
-    // TODO: UI — show "Next round soon" + quests
+
+    // Reset players to lobby spawn.
+    for (const ent of this.playerEntities.values()) {
+      if (ent.isSpawned) ent.setPosition(this.deps.positions.LOBBY_SPAWN);
+    }
+
     await this.waitUntil(() => this.players.size >= this.minPlayers);
   }
 
@@ -63,7 +73,11 @@ export class RoundStateMachine {
     this.state = 'RUNNING';
     this.seed = Math.floor(Math.random() * 1_000_000);
 
-    // TODO: spawn players at start; set alive=true
+    // Spawn/teleport players to run start.
+    for (const ent of this.playerEntities.values()) {
+      if (ent.isSpawned) ent.setPosition(this.deps.positions.RUN_SPAWN);
+    }
+
     this.deps.hazards.start(this.seed);
     await this.sleep(this.roundDurationMs);
     this.deps.hazards.stop();
@@ -71,10 +85,20 @@ export class RoundStateMachine {
 
   private async enterResults(): Promise<any[]> {
     this.state = 'RESULTS';
-    // TODO: calculate placements: survivalMs, aliveAtEnd, tokensEarned
-    // TODO: UI — results + Play Again default
-    await this.sleep(10_000);
+    // MVP: no placements yet.
+    await this.sleep(5_000);
     return [];
+  }
+
+  eliminate(playerId: string, info: { reason: string }) {
+    // MVP: instantly reset to lobby spawn.
+    const ent = this.playerEntities.get(playerId);
+    if (ent?.isSpawned) ent.setPosition(this.deps.positions.LOBBY_SPAWN);
+  }
+
+  getKillY() {
+    // @ts-ignore
+    return typeof (this.deps.hazards as any).getKillY === 'function' ? (this.deps.hazards as any).getKillY() : -9999;
   }
 
   private sleep(ms: number) {

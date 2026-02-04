@@ -6,17 +6,14 @@
 - [ ] Confirm entity/component APIs (spawn, physics, triggers, UI)
 
 ## 1) Core loop (Day 1)
-- [ ] Implement RoundStateMachine using Hytopia scheduler (LOBBY→COUNTDOWN→RUNNING→RESULTS)
-- [ ] Player lifecycle
-  - [ ] On join: add to round / lobby UI
-  - [ ] Late join: spectator until next round
-  - [ ] On leave: clean up
-- [ ] Map: one simple course with clear sightlines
+- [x] Implement RoundStateMachine skeleton (LOBBY→COUNTDOWN→RUNNING→RESULTS)
+- [x] Player join spawns DefaultPlayerEntity
+- [ ] Late join: spectator until next round (not in MVP yet)
+- [ ] Map: replace generated flat floor with real exported map
 
 ## 2) Hazards (Day 1)
-- [ ] Load `data/hazardSchedule.json` at server start
-- [ ] Implement hazards:
-  - [ ] `rising_fluid` (kill plane rising at riseRate)
+- [x] Load `data/hazardSchedule.json` at server start
+- [x] MVP hazard: `rising_fluid` implemented as a rising kill-height
   - [ ] `sweeper` (rotating arm w/ knockback)
   - [ ] `falling_tiles` (tiles fall after step / delay)
   - [ ] (optional) `wind_gust`
