@@ -88,7 +88,7 @@ export class RoundStateMachine {
     this.runStats.set(playerId, {
       runStartY: ent.position.y,
       bestYThisRun: ent.position.y,
-      bestYAllTime,
+      bestYAllTime: bestAllTime,
     });
   }
 
