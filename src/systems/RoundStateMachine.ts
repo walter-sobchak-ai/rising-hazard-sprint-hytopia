@@ -101,10 +101,12 @@ export class RoundStateMachine {
     const ent = this.playerEntities.get(playerId);
     if (!ent?.isSpawned) return;
 
-    // If we're in a run, respawn at run start; otherwise lobby.
+    // Climb mode: when eliminated during the run, bounce back to the run start.
     const spawn = this.state === 'RUNNING' ? this.deps.positions.RUN_SPAWN : this.deps.positions.LOBBY_SPAWN;
     ent.setPosition(spawn);
     ent.setLinearVelocity({ x: 0, y: 0, z: 0 });
+
+    // TODO: track best height per run + show in results.
   }
 
   getKillY() {

@@ -19,11 +19,24 @@ import { QuestsService } from './src/systems/QuestsService.js';
 
 const POSITIONS = {
   LOBBY_SPAWN: { x: 0, y: 6, z: 0 },
-  RUN_SPAWN: { x: 0, y: 6, z: 0 },
+  RUN_SPAWN: { x: 0, y: COURSE.baseY + 2, z: 0 },
 };
 
 // Minimal floor so players don't instantly fall.
-const FLOOR = { from: { x: -12, z: -12 }, to: { x: 12, z: 12 }, y: 0 };
+const FLOOR = { from: { x: -16, z: -16 }, to: { x: 16, z: 16 }, y: 0 };
+
+// Spiral climb course (procedural)
+const COURSE = {
+  baseY: 2,
+  steps: 42,
+  radius: 9,
+  stepHeight: 1,
+  platformHalfExtents: { x: 2, y: 0.5, z: 2 },
+};
+
+function degToRad(d: number) { return (d * Math.PI) / 180; }
+function round(n: number) { return Math.round(n); }
+
 
 startServer((world: World) => {
   bootstrapMinimalWorld(world);
@@ -40,8 +53,10 @@ startServer((world: World) => {
 });
 
 function bootstrapMinimalWorld(world: World) {
-  // Register a simple block type and lay down a floor.
+  // Register a couple block types and lay down a floor + a simple climb course.
   const FLOOR_BLOCK_TYPE_ID = 10;
+  const COURSE_BLOCK_TYPE_ID = 11;
+
   world.blockTypeRegistry.registerBlockType(
     new BlockType({
       id: FLOOR_BLOCK_TYPE_ID,
@@ -50,9 +65,38 @@ function bootstrapMinimalWorld(world: World) {
     })
   );
 
+  world.blockTypeRegistry.registerBlockType(
+    new BlockType({
+      id: COURSE_BLOCK_TYPE_ID,
+      name: 'Course',
+      textureUri: 'blocks/void-sand.png',
+    })
+  );
+
+  // Base floor
   for (let x = FLOOR.from.x; x <= FLOOR.to.x; x++) {
     for (let z = FLOOR.from.z; z <= FLOOR.to.z; z++) {
       world.chunkLattice.setBlock({ x, y: FLOOR.y, z }, FLOOR_BLOCK_TYPE_ID);
+    }
+  }
+
+  // Spiral stair platforms — each step is a small platform in a circle, climbing upward.
+  for (let i = 0; i < COURSE.steps; i++) {
+    const angle = degToRad(i * (360 / 14)); // 14 steps per full rotation
+    const x0 = round(Math.cos(angle) * COURSE.radius);
+    const z0 = round(Math.sin(angle) * COURSE.radius);
+    const y0 = COURSE.baseY + i * COURSE.stepHeight;
+
+    const hx = COURSE.platformHalfExtents.x;
+    const hy = COURSE.platformHalfExtents.y;
+    const hz = COURSE.platformHalfExtents.z;
+
+    for (let x = x0 - hx; x <= x0 + hx; x++) {
+      for (let z = z0 - hz; z <= z0 + hz; z++) {
+        for (let y = y0; y <= y0 + hy; y++) {
+          world.chunkLattice.setBlock({ x, y, z }, COURSE_BLOCK_TYPE_ID);
+        }
+      }
     }
   }
 }

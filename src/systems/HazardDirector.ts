@@ -82,7 +82,8 @@ export class HazardDirector {
       this.risingFluidEntity = new Entity({
         name: 'Rising Fluid',
         blockTextureUri: 'blocks/lava.png',
-        blockHalfExtents: { x: 40, y: 0.25, z: 40 },
+        // Smaller footprint so it reads as a “danger zone” around the course.
+        blockHalfExtents: { x: 18, y: 0.25, z: 18 },
         opacity: 0.65,
         rigidBodyOptions: {
           type: RigidBodyType.KINEMATIC_POSITION,

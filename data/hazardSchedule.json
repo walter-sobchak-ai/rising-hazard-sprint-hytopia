@@ -2,7 +2,7 @@
   "version": 1,
   "roundDurationMs": 120000,
   "phases": [
-    { "tMs": 0, "add": [{"type":"rising_fluid","params":{"startHeight":0,"riseRate":0.02}}] },
+    { "tMs": 0, "add": [{"type":"rising_fluid","params":{"startHeight":-10,"riseRate":0.35}}] },
     { "tMs": 20000, "add": [{"type":"sweeper","params":{"speed":1.2,"radius":8}}] },
     { "tMs": 45000, "add": [{"type":"falling_tiles","params":{"intervalMs":900,"tileCount":12}}] },
     { "tMs": 75000, "add": [{"type":"wind_gust","params":{"strength":0.8,"periodMs":6000}}] }
