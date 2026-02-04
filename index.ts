@@ -43,7 +43,6 @@ function bootstrapMinimalWorld(world: World) {
   // Register a simple block type and lay down a floor.
   const FLOOR_BLOCK_TYPE_ID = 10;
   world.blockTypeRegistry.registerBlockType(
-    FLOOR_BLOCK_TYPE_ID,
     new BlockType({
       id: FLOOR_BLOCK_TYPE_ID,
       name: 'Floor',
