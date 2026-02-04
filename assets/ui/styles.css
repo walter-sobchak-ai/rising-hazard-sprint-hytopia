@@ -15,50 +15,62 @@ html,body{height:100%;margin:0;background:transparent;overflow:hidden;font-famil
 
 #hud{position:fixed;inset:0;pointer-events:none}
 
+/* Base */
 .panel{
   pointer-events:none;
-  background: linear-gradient(180deg, rgba(17,22,33,.80), rgba(10,12,18,.65));
-  border: 1px solid var(--stroke);
+  background: linear-gradient(180deg, rgba(17,22,33,.62), rgba(10,12,18,.45));
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
 }
 
+/* HUD: move off top-left (bottom-center strip) */
 .top-left{
-  position:absolute; left:18px; top:18px;
-  width: 260px;
-  padding: 12px 12px 10px;
+  position:absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(520px, calc(100vw - 36px));
+  padding: 10px 12px;
+  display:flex;
+  align-items:center;
+  gap: 14px;
 }
 
-.metric .label{font-size:11px;letter-spacing:.12em;color:var(--muted)}
-.metric .value{font-size:34px;font-weight:750;line-height:1;margin-top:4px}
+.metric{display:flex;align-items:baseline;gap:10px;min-width:180px}
+.metric .label{font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.70)}
+.metric .value{font-size:28px;font-weight:800;line-height:1}
 
-.sub{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.chip{font-size:12px;color:var(--muted);border:1px solid rgba(255,255,255,.12);padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.04)}
-.chip b{color:var(--text)}
+.sub{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.10);padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.04)}
+.chip b{color:rgba(255,255,255,.92)}
 
-.bar{margin-top:10px;display:grid;grid-template-columns:54px 1fr 42px;gap:8px;align-items:center}
-.barLabel{font-size:11px;letter-spacing:.12em;color:var(--muted)}
+.bar{flex:1;display:grid;grid-template-columns:44px 1fr 44px;gap:8px;align-items:center}
+.barLabel{font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.70)}
 .barTrack{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.10)}
-.barFill{height:100%;width:0%;background:linear-gradient(90deg,var(--danger),#ff8a3d);}
-.barValue{font-size:12px;color:var(--muted);text-align:right}
+.barFill{height:100%;width:0%;background:linear-gradient(90deg,var(--danger),#ff8a3d)}
+.barValue{font-size:12px;color:rgba(255,255,255,.70);text-align:right}
 
+/* Quest panel: keep top-right but tighter, smaller */
 .right{
-  position:absolute; right:18px; top:18px;
-  width: 320px;
+  position:absolute;
+  right: 18px;
+  top: 18px;
+  width: 300px;
   padding: 12px;
 }
 .panelHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.panelTitle{font-size:12px;letter-spacing:.14em;color:rgba(255,255,255,.85)}
-.panelSubtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.panelTitle{font-size:12px;letter-spacing:.14em;color:rgba(255,255,255,.88)}
+.panelSubtitle{font-size:12px;color:rgba(255,255,255,.68);margin-top:2px}
 
-.toggle{pointer-events:auto;cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);padding:6px 10px;border-radius:10px;font-size:12px}
+.toggle{pointer-events:auto;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.92);padding:6px 10px;border-radius:10px;font-size:12px}
 .toggle:hover{border-color:rgba(50,214,255,.55)}
 
 .questList{display:flex;flex-direction:column;gap:10px}
 .quest{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
-.questTitle{font-size:13px;font-weight:650}
-.questMeta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:var(--muted);font-size:12px}
+.questTitle{font-size:13px;font-weight:700}
+.questMeta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:rgba(255,255,255,.70);font-size:12px}
 .questBar{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.10);margin-top:8px}
 .questFill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#7aa2ff)}
 
