@@ -1,124 +1,99 @@
-export type RoundState = 'LOBBY' | 'COUNTDOWN' | 'RUNNING' | 'RESULTS';
+export type RoundState = 'RUNNING';
 
-import type { World } from 'hytopia';
+import type { DefaultPlayerEntity, World } from 'hytopia';
 
 export interface RoundDeps {
   world: World;
   hazards: { loadSchedule(): Promise<void>; start(seed: number): void; stop(): void };
-  rewards: { grantRoundRewards(results: any[]): Promise<void> };
-  quests: { progressFromRound(results: any[]): Promise<void> };
 }
 
-import type { DefaultPlayerEntity } from 'hytopia';
+type RunStats = {
+  runStartY: number;
+  bestYThisRun: number;
+  bestYAllTime: number;
+};
 
 export class RoundStateMachine {
-  private state: RoundState = 'LOBBY';
+  private state: RoundState = 'RUNNING';
   private seed = 0;
-  private roundDurationMs = 120_000;
-  private lobbyWaitMs = 12_000;
-  private countdownMs = 5_000;
-  private minPlayers = 1;
+
   private players = new Set<string>();
   private playerEntities = new Map<string, DefaultPlayerEntity>();
+  private runStats = new Map<string, RunStats>();
 
-  constructor(private deps: RoundDeps & { positions: { LOBBY_SPAWN: any; RUN_SPAWN: any } }) {}
+  constructor(private deps: RoundDeps & { positions: { RUN_SPAWN: any } }) {}
 
   async start() {
     await this.deps.hazards.loadSchedule();
 
-    // TODO: replace with tick loop / scheduler from Hytopia.
-    // For scaffold purposes, we just outline the flow.
-    await this.loop();
+    // In solo mode, we keep the world "always running": hazards start once.
+    this.seed = Math.floor(Math.random() * 1_000_000);
+    this.deps.hazards.start(this.seed);
+
+    this.deps.world.chatManager.sendBroadcastMessage('Solo Mode: climb as high as you can before the lava catches you.');
   }
 
   onPlayerJoin(playerId: string, entity?: DefaultPlayerEntity) {
     this.players.add(playerId);
-    if (entity) this.playerEntities.set(playerId, entity);
+    if (entity) {
+      this.playerEntities.set(playerId, entity);
+      this.resetRun(playerId);
+    }
   }
 
   onPlayerLeave(playerId: string) {
     this.players.delete(playerId);
     this.playerEntities.delete(playerId);
+    this.runStats.delete(playerId);
   }
 
-  private async loop() {
-    while (true) {
-      await this.enterLobby();
-      await this.enterCountdown(this.countdownMs);
-      await this.enterRunning();
-      const results = await this.enterResults();
-      await this.deps.rewards.grantRoundRewards(results);
-      await this.deps.quests.progressFromRound(results);
+  // Call this from a player tick to track height.
+  observe(playerId: string) {
+    const ent = this.playerEntities.get(playerId);
+    const stats = this.runStats.get(playerId);
+    if (!ent?.isSpawned || !stats) return;
 
-      // TODO: break condition / server shutdown handling.
-    }
-  }
-
-  private async enterLobby() {
-    this.state = 'LOBBY';
-
-    this.deps.world.chatManager.sendBroadcastMessage('Lobby: next round starting soon...');
-
-    // Reset players to lobby spawn.
-    for (const ent of this.playerEntities.values()) {
-      if (ent.isSpawned) ent.setPosition(this.deps.positions.LOBBY_SPAWN);
-    }
-
-    await this.waitUntil(() => this.players.size >= this.minPlayers);
-    await this.sleep(this.lobbyWaitMs);
-  }
-
-  private async enterCountdown(ms: number) {
-    this.state = 'COUNTDOWN';
-    this.deps.world.chatManager.sendBroadcastMessage(`Round starts in ${Math.ceil(ms / 1000)}...`);
-    await this.sleep(ms);
-  }
-
-  private async enterRunning() {
-    this.state = 'RUNNING';
-    this.seed = Math.floor(Math.random() * 1_000_000);
-
-    this.deps.world.chatManager.sendBroadcastMessage('GO! Survive the rising hazard.');
-
-    // Spawn/teleport players to run start.
-    for (const ent of this.playerEntities.values()) {
-      if (ent.isSpawned) ent.setPosition(this.deps.positions.RUN_SPAWN);
-    }
-
-    this.deps.hazards.start(this.seed);
-    await this.sleep(this.roundDurationMs);
-    this.deps.hazards.stop();
-  }
-
-  private async enterResults(): Promise<any[]> {
-    this.state = 'RESULTS';
-    this.deps.world.chatManager.sendBroadcastMessage('Round over. Play again!');
-    await this.sleep(6_000);
-    return [];
+    const y = ent.position.y;
+    if (y > stats.bestYThisRun) stats.bestYThisRun = y;
+    if (y > stats.bestYAllTime) stats.bestYAllTime = y;
   }
 
   eliminate(playerId: string, info: { reason: string }) {
     const ent = this.playerEntities.get(playerId);
-    if (!ent?.isSpawned) return;
+    const stats = this.runStats.get(playerId);
+    if (!ent?.isSpawned || !stats) return;
 
-    // Climb mode: when eliminated during the run, bounce back to the run start.
-    const spawn = this.state === 'RUNNING' ? this.deps.positions.RUN_SPAWN : this.deps.positions.LOBBY_SPAWN;
-    ent.setPosition(spawn);
+    const bestThisRun = Math.floor(stats.bestYThisRun);
+    const bestAllTime = Math.floor(stats.bestYAllTime);
+
+    this.deps.world.chatManager.sendPlayerMessage(
+      ent.player,
+      `Eliminated (${info.reason}). Best height: ${bestThisRun}. Personal best: ${bestAllTime}.`,
+      'FFAA00'
+    );
+
+    ent.setPosition(this.deps.positions.RUN_SPAWN);
     ent.setLinearVelocity({ x: 0, y: 0, z: 0 });
 
-    // TODO: track best height per run + show in results.
+    this.resetRun(playerId);
+  }
+
+  private resetRun(playerId: string) {
+    const ent = this.playerEntities.get(playerId);
+    if (!ent?.isSpawned) return;
+
+    const existing = this.runStats.get(playerId);
+    const bestAllTime = existing?.bestYAllTime ?? ent.position.y;
+
+    this.runStats.set(playerId, {
+      runStartY: ent.position.y,
+      bestYThisRun: ent.position.y,
+      bestYAllTime,
+    });
   }
 
   getKillY() {
     // @ts-ignore
     return typeof (this.deps.hazards as any).getKillY === 'function' ? (this.deps.hazards as any).getKillY() : -9999;
-  }
-
-  private sleep(ms: number) {
-    return new Promise((r) => setTimeout(r, ms));
-  }
-
-  private async waitUntil(pred: () => boolean) {
-    while (!pred()) await this.sleep(250);
   }
 }

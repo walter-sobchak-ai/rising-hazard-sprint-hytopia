@@ -110,11 +110,22 @@ function onPlayerJoin(world: World, rounds: RoundStateMachine, player: Player) {
   playerEntity.spawn(world, POSITIONS.LOBBY_SPAWN);
   (playerEntity.controller as DefaultPlayerEntityController).canSwim = () => false;
 
-  // MVP elimination: if you go below the rising fluid height, you "die" and get reset.
+  // Solo mode:
+  // - Track best height
+  // - Eliminate when below rising hazard
+  // - Also eliminate if you fall far off the course
   playerEntity.on(EntityEvent.TICK, () => {
+    rounds.observe(player.id);
+
     const killY = rounds.getKillY();
     if (playerEntity.position.y < killY) {
-      rounds.eliminate(player.id, { reason: 'hazard' });
+      rounds.eliminate(player.id, { reason: 'lava' });
+      return;
+    }
+
+    if (playerEntity.position.y < -25) {
+      rounds.eliminate(player.id, { reason: 'fell' });
+      return;
     }
   });
 
